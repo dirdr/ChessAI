@@ -37,7 +37,9 @@ GAME_OVER = 3
 # color
 DARK_COLOR = "#4b7399"
 LIGHT_COLOR = "#eae9d2"
-SELECTED_COLOR = "#2f8ccc"
+SELECTED_COLOR_DARK = "#2f8ccc"
+SELECTED_COLOR_LIGHT = "#75c7e8"
+
 LIGHT_VALID_MOVE_DOT_COLOR = "#d2d1bd"
 DARK_VALID_MOVE_DOT_COLOR = "#436789"
 
@@ -210,7 +212,7 @@ class Game:
             for move in self.board.legal_moves:
                 self.board.push(move)
                 score = -tablebase.probe_dtz(self.board)
-                wdl = -tablebase.probe_wdl(self.board)
+                wdl = -tablebase.probe_wdl(self.board) 
                 self.board.pop()
                 print(f"move : {move}  score {score}  wdl  {wdl}")
                 if wdl == 2: # unconditional win
@@ -600,7 +602,7 @@ class Renderer:
         animate the arg move on the board, 
         this speed off the anim is set by the variable 'anim_duration'
         """
-        anim_duration: float = 0.20
+        anim_duration: float = 0.10
 
         from_c = move.from_square
         to_c = move.to_square
@@ -650,6 +652,7 @@ class Renderer:
             self.render_check()
 
         self.render_piece()
+        
         background.blit(ext, (BOARD_WIDTH, 0 ) )
 
     def render_blank_side(self) -> None:
@@ -764,6 +767,37 @@ class Renderer:
                                                                             CELL_SIZE,
                                                                             CELL_SIZE
                                                                         ))
+            
+            
+    def render_last_move(self, last_move: chess.Move) -> None:
+        if last_move is None: return
+        last_move_starting = last_move.from_square
+        last_move_ending = last_move.to_square
+        
+        lms = get_cell_coordinate_from_index(last_move_starting, self.user_color)
+        lme = get_cell_coordinate_from_index(last_move_ending, self.user_color)
+        
+        print(last_move_starting)
+        
+        lms_color = SELECTED_COLOR_LIGHT if is_light(last_move_starting) else SELECTED_COLOR_DARK
+        lme_color = SELECTED_COLOR_LIGHT if is_light(last_move_ending) else SELECTED_COLOR_DARK
+        
+        pygame.draw.rect(background, color = lms_color, rect = pygame.Rect(
+                                                                        lms[0],
+                                                                        lms[1],
+                                                                        CELL_SIZE,
+                                                                        CELL_SIZE
+                                                                    ))
+        
+        pygame.draw.rect(background, color = lme_color, rect = pygame.Rect(
+                                                                        lme[0],
+                                                                        lme[1],
+                                                                        CELL_SIZE,
+                                                                        CELL_SIZE
+                                                                    ))
+        
+        
+        
 
     def render_selected_cell(self) -> None:
         """
@@ -771,7 +805,8 @@ class Renderer:
         """
         if self.selected_cell != -1 and self.game.board.piece_at(self.selected_cell) != None:
             x, y = get_cell_coordinate_from_index(self.selected_cell, self.user_color)
-            pygame.draw.rect(background, color = SELECTED_COLOR, rect = pygame.Rect(
+            color = SELECTED_COLOR_LIGHT if is_light(self.selected_cell) else SELECTED_COLOR_DARK
+            pygame.draw.rect(background, color = color, rect = pygame.Rect(
                                                                         x,
                                                                         y,
                                                                         CELL_SIZE,
@@ -843,6 +878,7 @@ class GameManager:
         self.depth = 1 # the menu is loaded with the difficulty : easy
         self.renderer = Renderer(self.game)
         self.last_ia_move = chess.Move.null()
+        self.last_move = None
 
 
     def wait(self, time: float) -> None:
@@ -891,6 +927,7 @@ class GameManager:
                     move = chess.Move.null
                 else:
                     move = chess.Move(self.renderer.moving_piece_cell, drop_index)
+                    self.last_move = move
                     self.game.do_move(move, self.user_color)
 
                 self.renderer.moving_piece_cell = -1
@@ -933,6 +970,19 @@ class GameManager:
         outcome = self.game.board.outcome()
         if outcome != None:
             self.game_state = GAME_OVER
+            
+    def gm_interruption_darw(self) -> None:
+        
+        self.renderer.render_board()
+        self.renderer.render_selected_cell()
+        self.renderer.render_last_move(self.last_move)
+        self.renderer.render_legal_move()
+        self.renderer.render_check()
+        self.renderer.render_piece() # reset the piece position on the board and draw it before the ai thinking
+        background.blit(ext, (BOARD_WIDTH, 0 ) )
+        window.blit(background, (0, 0))
+        pygame.display.update()
+
 
 
     def update(self) -> None:
@@ -948,13 +998,15 @@ class GameManager:
         if self.game_state == GAME: # game
 
             if self.game.board.turn != self.renderer.user_color:
-
-                self.renderer.interruption_draw(True) # reset the piece position on the board and draw it before the ai thinking
-
+                
+                self.gm_interruption_darw()
+                
                 ia_move = self.game.get_ia_move(self.depth)
                 
                 self.wait(10) # wait a little bit before rendering the bot doing the move
+                
                 self.last_ia_move = ia_move
+                self.last_move = ia_move
                 self.renderer.animate_move(ia_move)
 
 
@@ -962,8 +1014,17 @@ class GameManager:
         if self.game_state == MENU:
             self.renderer.render_menu(self.depth)
         elif self.game_state == GAME:
-            self.renderer.render_game(True)
+            
+            self.renderer.render_board()
+            self.renderer.render_selected_cell()
+            self.renderer.render_last_move(self.last_move)
+            self.renderer.render_legal_move()
+            self.renderer.render_check()
+            self.renderer.render_piece()
+            background.blit(ext, (BOARD_WIDTH, 0 ) )
+            
             self.renderer.render_content_side(self.game.evaluation_done, self.last_ia_move)
+            
         elif self.game_state == GAME_OVER:
             self.renderer.render_game_over()
 
