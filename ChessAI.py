@@ -198,8 +198,7 @@ class Game:
     #PIECE_LIST = np.array[chess.PAWN, chess.ROOK, chess.BISHOP, chess.ROOK, chess.QUEEN]
 
     def __init__(self) -> None:
-        self.board = chess.Board()
-        print(self.board.legal_moves)
+        self.board = chess.Board("8/5RP1/1k5K/2pPQ3/1pPp4/pP1P4/P7/8")
         self.reader = chess.polyglot.open_reader(os.path.join('OpeningBook', 'Performance.bin'))
         self.evaluation_done = None
         self.evaluated_boards = {}
@@ -264,7 +263,6 @@ class Game:
                     only if there is no winning position possible"""
                     if no_winning:
                         return move 
-            print('\n\n')
             return best_move
 
     def evaluate(self) -> int:
@@ -459,13 +457,13 @@ class Game:
             for move in self.prioritizing_moves():
                 self.board.push(move)
                 score = -self.search(depth, -beta, -alpha)
+                print(score)
                 if score > best_score:
                     best_score = score
                     best_move = move
                 if score > alpha:
                     alpha = score
                 self.board.pop()
-            print("\n\n")
             return best_move
         else:
             return self.search_gaviota_tablebase()
@@ -479,7 +477,7 @@ class Game:
             return self.quiet(alpha, beta)
 
         if self.board.is_checkmate() : # checkmate
-                return -infini
+                return -200000
 
         
         if self.board.is_stalemate() or self.board.is_repetition(3) or self.board.is_seventyfive_moves() or self.board.has_insufficient_material(not self.board.turn): # draw
@@ -776,9 +774,7 @@ class Renderer:
         
         lms = get_cell_coordinate_from_index(last_move_starting, self.user_color)
         lme = get_cell_coordinate_from_index(last_move_ending, self.user_color)
-        
-        print(last_move_starting)
-        
+
         lms_color = SELECTED_COLOR_LIGHT if is_light(last_move_starting) else SELECTED_COLOR_DARK
         lme_color = SELECTED_COLOR_LIGHT if is_light(last_move_ending) else SELECTED_COLOR_DARK
         
@@ -972,7 +968,6 @@ class GameManager:
             self.game_state = GAME_OVER
             
     def gm_interruption_darw(self) -> None:
-        
         self.renderer.render_board()
         self.renderer.render_selected_cell()
         self.renderer.render_last_move(self.last_move)
@@ -982,8 +977,6 @@ class GameManager:
         background.blit(ext, (BOARD_WIDTH, 0 ) )
         window.blit(background, (0, 0))
         pygame.display.update()
-
-
 
     def update(self) -> None:
         """
