@@ -198,7 +198,7 @@ class Game:
     #PIECE_LIST = np.array[chess.PAWN, chess.ROOK, chess.BISHOP, chess.ROOK, chess.QUEEN]
 
     def __init__(self) -> None:
-        self.board = chess.Board("8/5RP1/1k5K/2pPQ3/1pPp4/pP1P4/P7/8")
+        self.board = chess.Board()
         self.reader = chess.polyglot.open_reader(os.path.join('OpeningBook', 'Performance.bin'))
         self.evaluation_done = None
         self.evaluated_boards = {}
