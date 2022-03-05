@@ -3,7 +3,9 @@
 
 ![](ChessAI_demo.png)
 
-### if you do not have the following dependencies : 
+## Installation
+
+### If you do not have the following dependencies : 
 
     pygame
     numpy
