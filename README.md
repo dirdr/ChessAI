@@ -1,7 +1,7 @@
 # ChessAI : Python AI and GUI 
 ## Using book moves, alpha-beta pruining and gaviota endgame Tablebase 
 
-![](ChessAI_exemple.png)
+![](ChessAI_demo.png)
 
 ### if you do not have the following dependencies : 
 
