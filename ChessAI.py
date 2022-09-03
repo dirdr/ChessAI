@@ -10,11 +10,6 @@ import chess.gaviota
 from math import dist
 import os
 
-
-
-"""
-    constant declaration
-"""
 # put 0.75 in scale if the screen is to big for the computer, it will reduce the size of ther window to 600*600
 SCALE = 1
 CELL_SIZE = (100*SCALE)
